@@ -30,8 +30,7 @@ def relay():
     hec.index = request.args.get("index", default="main")
     hec.sourcetype = request.args.get("sourcetype", default="webhook")
     hec.host = "relayserver"
-    hec_event.update({"event": request.json})
-    hec_payload.update({"event": hec_event})
+    hec_payload.update({"event": request.json})
     hec.sendEvent(hec_payload)
     return hec_payload
 
