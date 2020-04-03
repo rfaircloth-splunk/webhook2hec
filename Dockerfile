@@ -7,7 +7,7 @@ ADD requirements.txt /app/requirements.txt
 RUN pip install -r /app/requirements.txt
 COPY app.py /app
 
-EXPOSE 8000
+EXPOSE 5000
 
 
 ENV PYTHONUNBUFFERED=1

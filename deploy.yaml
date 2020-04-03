@@ -1,0 +1,96 @@
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: webhookdeployemnt
+  namespace: istio-system
+spec:
+  secretName: webhookdeployemnt-secret
+  issuerRef:
+    name: letsencrypt
+    kind: ClusterIssuer
+  commonName: web-hook-relay.spl.guru
+  dnsNames:
+    - "web-hook-relay.spl.guru"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: wh-gw
+  namespace: webhookrelay
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      tls:
+        mode: SIMPLE
+        credentialName: "webhookdeployemnt-secret"
+      hosts:
+        - "web-hook-relay.spl.guru"
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: webhookdeployemnt
+  namespace: webhookrelay
+spec:
+  gateways:
+    - wh-gw
+  hosts:
+    - web-hook-relay.spl.guru
+  http:
+    - route:
+        - destination:
+            host: webhookproxy-service
+            port:
+              number: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webhookproxy-service
+  namespace: webhookrelay
+spec:
+  selector:
+    app: webhookproxy
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webhookproxy-deployment
+  namespace: webhookrelay
+  labels:
+    app: webhookproxy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: webhookproxy
+  template:
+    metadata:
+      labels:
+        app: webhookproxy
+    spec:
+      containers:
+        - name: main
+          image: rfaircloth/webhook2hec:latest
+          ports:
+            - containerPort: 5000
+          volumeMounts:
+            - name: config-volume
+              mountPath: /mnt/
+      volumes:
+        - name: config-volume
+          configMap:
+            # Provide the name of the ConfigMap containing the files you want
+            # to add to the container
+            name: config
+# rfaircloth/webhookproxy:tagname
