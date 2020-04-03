@@ -82,15 +82,7 @@ spec:
       containers:
         - name: main
           image: rfaircloth/webhook2hec:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
-          volumeMounts:
-            - name: config-volume
-              mountPath: /mnt/
-      volumes:
-        - name: config-volume
-          configMap:
-            # Provide the name of the ConfigMap containing the files you want
-            # to add to the container
-            name: config
 # rfaircloth/webhookproxy:tagname
