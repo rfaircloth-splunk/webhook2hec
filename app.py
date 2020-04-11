@@ -39,8 +39,8 @@ def relay():
     hec_payload.update({"event": request.json})
     try:
         hec.sendEvent(hec_payload)
-    except:
-        abort(500)
+    except Exception as e:
+        app.log_exception(e)
 
     return "OK"
 
