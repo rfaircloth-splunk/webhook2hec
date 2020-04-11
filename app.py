@@ -11,6 +11,7 @@ app = Flask(__name__)
 @app.route("/passthehook", methods=["POST"])
 def relay():
 
+    app.logger.debug(request.json)
     http_event_collector_host = request.args.get("server", default="unknown")
     http_event_collector_port = request.args.get("port", default="443")
     http_event_collector_key = request.args.get("hec_token", default="unknown")
@@ -23,7 +24,8 @@ def relay():
         http_event_port=http_event_collector_port,
     )
     hec.popNullFields = True
-    hec.log.setLevel(logging.DEBUG)
+    hec.log = app.logger
+
     hec_payload = {}
     hec_event = {}
 
@@ -31,8 +33,12 @@ def relay():
     hec.sourcetype = request.args.get("sourcetype", default="webhook")
     hec.host = "relayserver"
     hec_payload.update({"event": request.json})
-    hec.sendEvent(hec_payload)
-    return hec_payload
+    try:
+        hec.sendEvent(hec_payload)
+    except:
+        abort(500)
+
+    return "OK"
 
 
 if __name__ == "__main__":

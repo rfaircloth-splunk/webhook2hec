@@ -1,35 +1,35 @@
-apiVersion: cert-manager.io/v1alpha2
-kind: Certificate
-metadata:
-  name: webhookdeployemnt
-  namespace: istio-system
-spec:
-  secretName: webhookdeployemnt-secret
-  issuerRef:
-    name: letsencrypt
-    kind: ClusterIssuer
-  commonName: web-hook-relay.spl.guru
-  dnsNames:
-    - "web-hook-relay.spl.guru"
----
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: wh-gw
-  namespace: webhookrelay
-spec:
-  selector:
-    istio: ingressgateway
-  servers:
-    - port:
-        number: 443
-        name: https
-        protocol: HTTPS
-      tls:
-        mode: SIMPLE
-        credentialName: "webhookdeployemnt-secret"
-      hosts:
-        - "web-hook-relay.spl.guru"
+# apiVersion: cert-manager.io/v1alpha2
+# kind: Certificate
+# metadata:
+#   name: webhookdeployemnt
+#   namespace: istio-system
+# spec:
+#   secretName: webhookdeployemnt-secret
+#   issuerRef:
+#     name: letsencrypt
+#     kind: ClusterIssuer
+#   commonName: web-hook-relay.spl.guru
+#   dnsNames:
+#     - "web-hook-relay.spl.guru"
+# ---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: Gateway
+# metadata:
+#   name: wh-gw
+#   namespace: webhookrelay
+# spec:
+#   selector:
+#     istio: istio-system/ingressgateway
+#   servers:
+#     - port:
+#         number: 443
+#         name: https
+#         protocol: HTTPS
+#       tls:
+#         mode: SIMPLE
+#         credentialName: "webhookdeployemnt-secret"
+#       hosts:
+#         - "web-hook-relay.spl.guru"
 
 ---
 apiVersion: networking.istio.io/v1beta1
@@ -39,7 +39,7 @@ metadata:
   namespace: webhookrelay
 spec:
   gateways:
-    - wh-gw
+    - istio-system/ingressgateway
   hosts:
     - web-hook-relay.spl.guru
   http:
@@ -58,7 +58,8 @@ spec:
   selector:
     app: webhookproxy
   ports:
-    - protocol: TCP
+    - name: http-5000
+      protocol: TCP
       port: 5000
       targetPort: 5000
 ---
@@ -70,7 +71,7 @@ metadata:
   labels:
     app: webhookproxy
 spec:
-  replicas: 3
+  replicas: 5
   selector:
     matchLabels:
       app: webhookproxy
