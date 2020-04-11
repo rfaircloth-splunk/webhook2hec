@@ -42,6 +42,7 @@ def requests_retry_session(
 def relay():
 
     app.logger.debug(request)
+    app.logger.debug(request.headers)
     app.logger.debug(request.data)
     app.logger.debug(request.json)
     try:
@@ -73,8 +74,7 @@ def relay():
         }
 
         response = requests_retry_session().post(
-            server_uri, data=json.dumps(event
-            ), headers=headers
+            server_uri, data=json.dumps(event), headers=headers
         )
         app.logger.info(f"Response {response}")
     except Exception as e:
