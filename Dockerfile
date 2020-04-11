@@ -11,7 +11,7 @@ EXPOSE 5000
 
 
 ENV PYTHONUNBUFFERED=1
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--worker-class", "gthread", "--worker-tmp-dir", "/dev/shm", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--worker-class", "gthread", "--worker-tmp-dir", "/dev/shm", "--log-level", "DEBUG", "app:app"]
 
 # add app info as environment variables
 ARG GIT_COMMIT
