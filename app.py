@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request, abort
 import requests
 from splunk_http_event_collector import http_event_collector
 import logging
+import json
 
 app = Flask(__name__)
 
@@ -15,7 +16,8 @@ app.logger.setLevel(logging.DEBUG)
 @app.route("/passthehook", methods=["POST"])
 def relay():
 
-    app.logger.debug(request.json)
+    app.logger.debug(request)
+    app.logger.debug(request.data)
     http_event_collector_host = request.args.get("server", default="unknown")
     http_event_collector_port = request.args.get("port", default="443")
     http_event_collector_key = request.args.get("hec_token", default="unknown")
@@ -36,7 +38,8 @@ def relay():
     hec.index = request.args.get("index", default="main")
     hec.sourcetype = request.args.get("sourcetype", default="webhook")
     hec.host = "relayserver"
-    hec_payload.update({"event": request.json})
+    hec_event = json.loads(request.data)
+    hec_payload.update({"event": hec_event})
     try:
         hec.sendEvent(hec_payload)
     except Exception as e:
