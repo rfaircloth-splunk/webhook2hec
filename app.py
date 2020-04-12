@@ -144,44 +144,58 @@ def microsoft_office_365():
     tenant = "5786c99c-eb12-4b3b-a84d-df06a2e4516d"
 
     app.logger.debug(f"tenant {tenant}")
+    app.logger.debug(f"type {type(request.json)}")
+    if isinstance(request.json, list):
+        auth_token = get_token_from_client_credentials(
+            endpoint=f"https://login.microsoftonline.com/{tenant}/oauth2/token",
+            client_id=clear["client_id"],
+            client_secret=clear["client_secret"],
+        )
+        headers = {"Authorization": "Bearer " + auth_token}
+        for item in request.json:
 
-    auth_token = get_token_from_client_credentials(
-        endpoint=f"https://login.microsoftonline.com/{tenant}/oauth2/token",
-        client_id=clear["client_id"],
-        client_secret=clear["client_secret"],
-    )
-    headers = {"Authorization": "Bearer " + auth_token}
-    for item in request.json:
-        app.logger.debug(f"Item {item}")
-        response = requests_retry_session().get(item["contentUri"], headers=headers)
+            app.logger.debug(f"Item {item}")
+            response = requests_retry_session().get(item["contentUri"], headers=headers)
 
-        source_events = response.json()
-        splunk_events = []
+            source_events = response.json()
+            splunk_events = []
 
-        for source_event in source_events:
-            ts = dateutil.parser.parse(source_event["CreationTime"]).strftime("%s")
-            app.logger.debug(f"ts: {ts}")
+            for source_event in source_events:
+                ts = dateutil.parser.parse(source_event["CreationTime"]).strftime("%s")
+                app.logger.debug(f"ts: {ts}")
 
-            clean_event = dict(
-                filter(lambda item: item[1] is not None, source_event.items())
-            )
-            event = {
-                "time": ts,
-                "index": request.args.get("index", default="main"),
-                "sourcetype": request.args.get(
-                    "sourcetype", default="o365:management:activity"
-                ),
-                "source": item["contentType"],
-                "host": "manage.office.com",
-                "event": clean_event,
-            }
-            splunk_events.append(event)
-            app.logger.debug(f"splunk_event: {event}")
+                clean_event = dict(
+                    filter(lambda item: item[1] is not None, source_event.items())
+                )
+                event = {
+                    "time": ts,
+                    "index": request.args.get("index", default="main"),
+                    "sourcetype": request.args.get(
+                        "sourcetype", default="o365:management:activity"
+                    ),
+                    "source": item["contentType"],
+                    "host": "manage.office.com",
+                    "event": clean_event,
+                }
+                splunk_events.append(event)
+                app.logger.debug(f"splunk_event: {event}")
 
-    send_event(
-        clear["splunk_host"], "443", clear["splunk_token"], splunk_events,
-    )
-
+        send_event(
+            clear["splunk_host"], "443", clear["splunk_token"], splunk_events,
+        )
+    else:
+        event = {
+            "index": request.args.get("index", default="main"),
+            "sourcetype": request.args.get(
+                "sourcetype", default="o365:management:subscription"
+            ),
+            "source": "subscription",
+            "host": "manage.office.com",
+            "event": request.json,
+        }
+        send_event(
+            clear["splunk_host"], "443", clear["splunk_token"], event,
+        )
     return "OK"
 
 
