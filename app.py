@@ -146,6 +146,18 @@ def microsoft_office_365():
     app.logger.debug(f"tenant {tenant}")
     app.logger.debug(f"type {type(request.json)}")
     if isinstance(request.json, list):
+        event = {
+            "index": request.args.get("index", default="main"),
+            "sourcetype": request.args.get(
+                "sourcetype", default="o365:management:notifcation"
+            ),
+            "source": "subscription",
+            "host": "manage.office.com",
+            "event": request.json,
+        }
+        send_event(
+            clear["splunk_host"], "443", clear["splunk_token"], event,
+        )
         auth_token = get_token_from_client_credentials(
             endpoint=f"https://login.microsoftonline.com/{tenant}/oauth2/token",
             client_id=clear["client_id"],
