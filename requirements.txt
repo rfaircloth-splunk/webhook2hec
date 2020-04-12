@@ -1,3 +1,4 @@
 flask
 requests
-git+git://github.com/georgestarcher/Splunk-Class-httpevent.git
+python-dateutil
+pyjwt

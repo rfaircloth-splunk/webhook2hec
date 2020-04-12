@@ -53,4 +53,10 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
+          env:
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: mysecret
+                  key: key
 # rfaircloth/webhookproxy:tagname
